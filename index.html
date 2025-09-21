@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="es-AR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Generador de Ticket – Pizzería</title>
+<style>
+    :root{
+      /* 58mm: ancho imprimible real suele ser 48–50mm (muchas son 384 dots ≈ 48mm) */
+      --paper-width: 48mm; /* ancho útil dentro del papel de 58mm */
+      --body-font: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
+    }
+    *{box-sizing:border-box}
+    body{font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin:0; padding:16px; background:#0b0b0c; color:#eaeaea}
+    h1{font-size:20px; margin:0 0 12px}
+    .app{max-width:980px; margin:0 auto; display:grid; gap:16px}
+    .header-card{background:#131316; border:1px solid #2a2a2e; border-radius:12px; padding:16px; display:flex; align-items:center; justify-content:space-between;}
+    .card{background:#131316; border:1px solid #2a2a2e; border-radius:12px; padding:16px}
+    .row{display:grid; grid-template-columns:repeat(12,1fr); gap:12px}
+    .row > .col-6{grid-column:span 6}
+    .row > .col-4{grid-column:span 4}
+    .row > .col-3{grid-column:span 3}
+    label{display:block; font-size:12px; color:#b7b7c2; margin:6px 0}
+    input[type="text"], input[type="number"]{
+      width:100%; padding:10px 12px; border:1px solid #34343a; background:#18181c; color:#fff; border-radius:10px; outline:none;
+    }
+    input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    .btn{appearance:none; border:1px solid #2f2f35; background:#1e1e22; color:#fff; padding:10px 14px; border-radius:10px; cursor:pointer}
+    .btn:hover{background:#25252a}
+    .btn.primary{background:#4f46e5; border-color:#4f46e5}
+    .btn.primary:hover{background:#4338ca}
+    .btn.ghost{background:transparent}
+    .items{width:100%; border-collapse:collapse; margin-top:8px}
+    .items th, .items td{border-bottom:1px dashed #2b2b31; padding:8px 6px; font-size:14px}
+    .items th{color:#a9a9b3; font-weight:600}
+    .items td:last-child, .items th:last-child{text-align:right}
+    .total{display:flex; justify-content:flex-end; font-size:18px; gap:12px; margin-top:8px}
+    .danger{color:#f87171}
+    .muted{color:#9aa0a6; font-size:12px}
+  
+    /* —— Área imprimible —— */
+    #print-target{display:none}
+    .ticket{
+      width: var(--paper-width);
+      padding: 0;
+      font-family: var(--body-font);
+      color:#000;
+      background:#fff;
+    }
+    .t-wrap{padding:8px}
+    .t-center{text-align:center}
+    .t-right{text-align:right}
+    .t-mono{font-family: var(--body-font)}
+    /* ↓ Ajustes suaves para 58mm */
+    .t-title{font-weight:700; font-size:14px}
+    .t-sub{font-size:10px}
+    .t-line{border-top:1px dashed #000; margin:6px 0}
+    .t-row{display:flex; justify-content:space-between; gap:6px; font-size:11px}
+    .t-items{width:100%; border-collapse:collapse; font-size:11px}
+    .t-items td{padding:2px 0; vertical-align:top}
+    .t-items .desc{width:60%} /* un toque más angosto para no cortar */
+    .t-total{font-size:13px; font-weight:700; margin-top:6px; padding-top:6px; border-top:2px solid #000}
+    .t-note{font-size:9px; margin-top:8px; text-align:center}
+    .t-qr{display:block; margin:8px auto 0; width:110px; height:110px; background:#0000}
+  
+    @media print{
+      body{background:#fff; padding:0; margin:0}
+      .app{display:none}
+      #print-target{display:block}
+      /* Tamaño de papel para 58mm. Ajustá el margen si el driver permite 0–3mm */
+      @page{ size: 58mm auto; margin: 3mm }
+    }
+  </style>
+  
+</head>
+<body>
+  <div class="app">
+    <div class="card header-card">
+      <h1>Generador de Ticket de Los Tilos</h1>
+      <img src="logotilos.png" alt="Los Tilos" style="width: 100%; max-width: 250px; height: auto;">
+    </div>
+
+    <!-- Datos del comercio -->
+    <div class="card">
+      <h2 style="margin:0 0 8px; font-size:16px">Datos del comercio</h2>
+      <div class="row">
+        <div class="col-6">
+          <label>Nombre del comercio</label>
+          <input id="negocio" type="text" placeholder="Pizzería de la Esquina" />
+        </div>
+        <div class="col-6">
+          <label>Dirección</label>
+          <input id="direccion" type="text" />
+        </div>
+        <div class="col-6">
+          <label>CUIT</label>
+          <input id="cuit" type="text" />
+        </div>
+        <div class="col-6">
+          <label>Condición frente al IVA</label>
+          <input id="condicion" type="text" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Carga de ítems -->
+    <div class="card">
+      <h2 style="margin:0 0 8px; font-size:16px">Agregar ítem</h2>
+      <div class="row">
+        <div class="col-6">
+          <label>Nombre</label>
+          <input id="item-nombre" type="text" placeholder="Muzzarella" />
+        </div>
+        <div class="col-3">
+          <label>Precio (unidad)</label>
+          <input id="item-precio" type="number" step="0.01" min="0" placeholder="0.00" />
+        </div>
+        <div class="col-3">
+          <label>Cantidad</label>
+          <input id="item-cantidad" type="number" step="1" min="1" placeholder="1" />
+        </div>
+      </div>
+      <div style="margin-top:10px; display:flex; gap:8px">
+        <button class="btn primary" id="btn-agregar">Agregar nuevo campo</button>
+        <button class="btn ghost" id="btn-limpiar">Vaciar lista</button>
+      </div>
+
+      <table class="items" id="tabla-items" aria-label="Listado">
+        <thead>
+          <tr><th>Ítem</th><th>Subtotal</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+
+      <div class="total">
+        <div>Total:</div>
+        <div id="total-valor">$ 0,00</div>
+      </div>
+    </div>
+
+    <!-- Acciones -->
+    <div class="card" style="display:flex; gap:8px; align-items:center; justify-content:space-between">
+      <div>
+        <button class="btn" id="btn-guardar">Guardar datos</button>
+        <button class="btn" id="btn-restaurar">Restaurar guardado</button>
+      </div>
+      <div>
+        <button class="btn primary" id="btn-imprimir">Imprimir ticket</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Área que se imprime -->
+  <div id="print-target">
+    <div class="ticket" id="ticket">
+      <!-- se completa por JS -->
+    </div>
+  </div>
+
+<script>
+(function(){
+  // ——— Utilidades ———
+  const $ = sel => document.querySelector(sel);
+  const fmt = new Intl.NumberFormat("es-AR", {style:"currency", currency:"ARS", minimumFractionDigits:2});
+  const state = { negocio:"", direccion:"", cuit:"", condicion:"", items:[] };
+
+  // Prefills solicitados por vos
+  const DEFAULTS = {
+    negocio: "Pizzería (editar)",
+    direccion: "Av. 59 2422, Necochea",
+    cuit: "20-22531500-1",
+    condicion: "Monotributista – Categoría E"
+  };
+
+  // ——— Cargar / Guardar ———
+  function loadSaved(){
+    const saved = localStorage.getItem("ticket-pizzeria");
+    if(!saved) return;
+    try{
+      const obj = JSON.parse(saved);
+      Object.assign(state, obj);
+      // pintar en inputs
+      $("#negocio").value = state.negocio || DEFAULTS.negocio;
+      $("#direccion").value = state.direccion || DEFAULTS.direccion;
+      $("#cuit").value     = state.cuit || DEFAULTS.cuit;
+      $("#condicion").value= state.condicion || DEFAULTS.condicion;
+      renderItems();
+    }catch(e){ console.warn(e); }
+  }
+  function save(){
+    // tomar inputs
+    state.negocio  = $("#negocio").value || DEFAULTS.negocio;
+    state.direccion= $("#direccion").value || DEFAULTS.direccion;
+    state.cuit     = $("#cuit").value || DEFAULTS.cuit;
+    state.condicion= $("#condicion").value || DEFAULTS.condicion;
+    localStorage.setItem("ticket-pizzeria", JSON.stringify(state));
+  }
+
+  // ——— Ítems ———
+  function addItem(){
+    const nombre = $("#item-nombre").value.trim();
+    const precio = parseFloat($("#item-precio").value);
+    const cantidad = parseInt($("#item-cantidad").value, 10);
+
+    if(!nombre || isNaN(precio) || isNaN(cantidad) || cantidad <= 0){
+      alert("Completá nombre, precio y cantidad (cantidad ≥ 1).");
+      return;
+    }
+
+    state.items.push({nombre, precio, cantidad, subtotal: +(precio * cantidad).toFixed(2)});
+    $("#item-nombre").value = "";
+    $("#item-precio").value = "";
+    $("#item-cantidad").value = "";
+    renderItems();
+  }
+
+  function removeItem(idx){
+    state.items.splice(idx, 1);
+    renderItems();
+  }
+
+  function renderItems(){
+    const tbody = $("#tabla-items tbody");
+    tbody.innerHTML = "";
+    let total = 0;
+
+    state.items.forEach((it, i)=>{
+      total += it.subtotal;
+      const tr = document.createElement("tr");
+      const left = document.createElement("td");
+      const right = document.createElement("td");
+
+      left.innerHTML = `
+        <div><strong>${escapeHTML(it.nombre)}</strong></div>
+        <div class="muted">${it.cantidad} × ${fmt.format(it.precio)}</div>
+        <button class="btn ghost danger" style="padding:4px 8px; margin-top:4px" data-del="${i}">Eliminar</button>
+      `;
+      right.textContent = fmt.format(it.subtotal);
+
+      tr.appendChild(left);
+      tr.appendChild(right);
+      tbody.appendChild(tr);
+    });
+
+    $("#total-valor").textContent = fmt.format(total);
+  }
+
+  function escapeHTML(s){
+    return s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  }
+
+  // ——— Ticket imprimible ———
+  function buildTicketHTML(){
+    // asegurar inputs en state
+    save();
+    const now = new Date();
+    const fecha = now.toLocaleDateString("es-AR");
+    const hora  = now.toLocaleTimeString("es-AR", {hour:"2-digit", minute:"2-digit"});
+
+    // Cuerpo de ítems
+    const itemsHTML = state.items.map(it=>{
+      const linea1 = `<div><strong>${escapeHTML(it.nombre)}</strong></div>`;
+      const linea2 = `<div class="t-sub">${it.cantidad} × ${fmt.format(it.precio)}</div>`;
+      const right  = `<div class="t-right">${fmt.format(it.subtotal)}</div>`;
+      return `
+        <tr>
+          <td class="desc">
+            ${linea1}
+            ${linea2}
+          </td>
+          <td class="t-right">${fmt.format(it.subtotal)}</td>
+        </tr>`;
+    }).join("");
+
+    const total = state.items.reduce((a,b)=>a + b.subtotal, 0);
+
+    return `
+      <div class="t-wrap">
+        <div class="t-center t-title t-mono">${escapeHTML(state.negocio || DEFAULTS.negocio)}</div>
+        <div class="t-center t-sub">${escapeHTML(state.direccion || DEFAULTS.direccion)}</div>
+        <div class="t-center t-sub">CUIT: ${escapeHTML(state.cuit || DEFAULTS.cuit)}</div>
+        <div class="t-center t-sub">${escapeHTML(state.condicion || DEFAULTS.condicion)}</div>
+        <div class="t-line"></div>
+        <div class="t-row"><div>Fecha y hora</div><div>${fecha} ${hora}</div></div>
+        <div class="t-line"></div>
+
+        <table class="t-items" aria-label="Items">
+          <tbody>
+            ${itemsHTML || `<tr><td class="desc">— Sin ítems —</td><td class="t-right">$ 0,00</td></tr>`}
+          </tbody>
+        </table>
+
+        <div class="t-total t-row">
+          <div>TOTAL</div>
+          <div>${fmt.format(total)}</div>
+        </div>
+
+        <div class="t-note">Documento no válido como comprobante fiscal</div>
+      </div>
+    `;
+  }
+
+  function printTicket(){
+    // Render
+    $("#ticket").innerHTML = buildTicketHTML();
+    // Imprimir
+    window.print();
+  }
+
+  // ——— Eventos ———
+  $("#btn-agregar").addEventListener("click", addItem);
+  $("#btn-limpiar").addEventListener("click", ()=>{
+    if(confirm("¿Vaciar todos los ítems?")){ state.items = []; renderItems(); }
+  });
+  $("#tabla-items").addEventListener("click", (e)=>{
+    const btn = e.target.closest("[data-del]");
+    if(btn){ removeItem(parseInt(btn.dataset.del, 10)); }
+  });
+  $("#btn-guardar").addEventListener("click", ()=>{ save(); alert("Datos guardados en este navegador."); });
+  $("#btn-restaurar").addEventListener("click", ()=>{ loadSaved(); alert("Datos restaurados."); });
+  $("#btn-imprimir").addEventListener("click", printTicket);
+
+  // Prefill inicial
+  (function init(){
+    // Defaults visibles la primera vez
+    $("#negocio").value   = DEFAULTS.negocio;
+    $("#direccion").value = DEFAULTS.direccion;
+    $("#cuit").value      = DEFAULTS.cuit;
+    $("#condicion").value = DEFAULTS.condicion;
+    loadSaved(); // sobrescribe si ya hay guardado
+  })();
+})();
+</script>
+</body>
+</html>
