@@ -3,333 +3,1046 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Generador de Ticket – Pizzería</title>
+<title>Generador de Ticket – Los Tilos</title>
 <style>
-    :root{
-      /* 58mm: ancho imprimible real suele ser 48–50mm (muchas son 384 dots ≈ 48mm) */
-      --paper-width: 48mm; /* ancho útil dentro del papel de 58mm */
-      --body-font: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
-    }
-    *{box-sizing:border-box}
-    body{font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin:0; padding:16px; background:#0b0b0c; color:#eaeaea}
-    h1{font-size:20px; margin:0 0 12px}
-    .app{max-width:980px; margin:0 auto; display:grid; gap:16px}
-    .header-card{background:#131316; border:1px solid #2a2a2e; border-radius:12px; padding:16px; display:flex; align-items:center; justify-content:space-between;}
-    .card{background:#131316; border:1px solid #2a2a2e; border-radius:12px; padding:16px}
-    .row{display:grid; grid-template-columns:repeat(12,1fr); gap:12px}
-    .row > .col-6{grid-column:span 6}
-    .row > .col-4{grid-column:span 4}
-    .row > .col-3{grid-column:span 3}
-    label{display:block; font-size:12px; color:#b7b7c2; margin:6px 0}
-    input[type="text"], input[type="number"]{
-      width:100%; padding:10px 12px; border:1px solid #34343a; background:#18181c; color:#fff; border-radius:10px; outline:none;
-    }
-    input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-    .btn{appearance:none; border:1px solid #2f2f35; background:#1e1e22; color:#fff; padding:10px 14px; border-radius:10px; cursor:pointer}
-    .btn:hover{background:#25252a}
-    .btn.primary{background:#4f46e5; border-color:#4f46e5}
-    .btn.primary:hover{background:#4338ca}
-    .btn.ghost{background:transparent}
-    .items{width:100%; border-collapse:collapse; margin-top:8px}
-    .items th, .items td{border-bottom:1px dashed #2b2b31; padding:8px 6px; font-size:14px}
-    .items th{color:#a9a9b3; font-weight:600}
-    .items td:last-child, .items th:last-child{text-align:right}
-    .total{display:flex; justify-content:flex-end; font-size:18px; gap:12px; margin-top:8px}
-    .danger{color:#f87171}
-    .muted{color:#9aa0a6; font-size:12px}
-  
-    /* —— Área imprimible —— */
-    #print-target{display:none}
-    .ticket{
-      width: var(--paper-width);
-      padding: 0;
-      font-family: var(--body-font);
-      color:#000;
-      background:#fff;
-    }
-    .t-wrap{padding:8px}
-    .t-center{text-align:center}
-    .t-right{text-align:right}
-    .t-mono{font-family: var(--body-font)}
-    /* ↓ Ajustes suaves para 58mm */
-    .t-title{font-weight:700; font-size:14px}
-    .t-sub{font-size:10px}
-    .t-line{border-top:1px dashed #000; margin:6px 0}
-    .t-row{display:flex; justify-content:space-between; gap:6px; font-size:11px}
-    .t-items{width:100%; border-collapse:collapse; font-size:11px}
-    .t-items td{padding:2px 0; vertical-align:top}
-    .t-items .desc{width:60%} /* un toque más angosto para no cortar */
-    .t-total{font-size:13px; font-weight:700; margin-top:6px; padding-top:6px; border-top:2px solid #000}
-    .t-note{font-size:9px; margin-top:8px; text-align:center}
-    .t-qr{display:block; margin:8px auto 0; width:110px; height:110px; background:#0000}
-  
-    @media print{
-      body{background:#fff; padding:0; margin:0}
-      .app{display:none}
-      #print-target{display:block}
-      /* Tamaño de papel para 58mm. Ajustá el margen si el driver permite 0–3mm */
-      @page{ size: 58mm auto; margin: 3mm }
-    }
-  </style>
-  
+  :root{ --paper-width:48mm; --body-font:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace; }
+  *{box-sizing:border-box}
+  body{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;margin:0;padding:16px;background:#0b0b0c;color:#eaeaea}
+  h1{font-size:20px;margin:0}
+  .app{max-width:1100px;margin:0 auto;display:grid;gap:16px}
+  .header-card{background:#131316;border:1px solid #2a2a2e;border-radius:12px;padding:16px;display:flex;align-items:center;justify-content:space-between}
+  .card{background:#131316;border:1px solid #2a2a2e;border-radius:12px;padding:8px 16px}
+  .row{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
+  .row>.col-6{grid-column:span 6}.row>.col-4{grid-column:span 4}.row>.col-3{grid-column:span 3}
+  label{display:block;font-size:12px;color:#b7b7c2;margin:6px 0}
+  input[type="text"],input[type="number"],select{width:100%;padding:10px 12px;border:1px solid #34343a;background:#18181c;color:#fff;border-radius:10px;outline:none}
+  .btn{appearance:none;border:1px solid #2f2f35;background:#1e1e22;color:#fff;padding:10px 14px;border-radius:10px;cursor:pointer}
+  .btn:hover{background:#25252a}.btn.primary{background:#4f46e5;border-color:#4f46e5}.btn.primary:hover{background:#4338ca}
+  .items{width:100%;border-collapse:collapse;margin-top:8px}
+  .items th,.items td{border-bottom:1px dashed #2b2b31;padding:8px 6px;font-size:14px}
+  .items th{color:#a9a9b3;font-weight:600}.items td:last-child,.items th:last-child{text-align:right}
+  .total{display:flex;justify-content:flex-end;font-size:18px;gap:12px;margin-top:8px}
+  .danger{color:#f87171}.muted{color:#9aa0a6;font-size:12px}
+  .tabs{display:flex;gap:8px;flex-wrap:wrap}
+  .tabbtn{padding:8px 12px;border-radius:10px;border:1px solid #2a2a2e;background:#1a1a1e;color:#fff;cursor:pointer}
+  .tabbtn.active{background:#33334b;border-color:#4f46e5}
+  .tab{display:none}.tab.active{display:block}
+
+  /* Precios styles */
+  .precios-table{width:100%;border-collapse:collapse;margin-top:8px}
+  .precios-table th,.precios-table td{border-bottom:1px solid #2a2a2e;padding:8px 6px}
+  .precios-table th{color:#a9a9b3;text-align:left}
+  .precios-table input[type="number"]{width:120px;padding:6px;border-radius:8px;border:1px solid #34343a;background:#18181c;color:#fff}
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;justify-content:space-between;align-items:center;margin:12px 0}
+
+  /* Historial styles */
+  .historial-grid{display:grid;grid-template-columns:1fr 2fr;gap:16px;margin-top:16px}
+  .dias-list{list-style:none;padding:0;margin:0}
+  .dias-list li{margin-bottom:8px}
+  .pedido-card{background:#1a1a1e;border:1px solid #2a2a2e;border-radius:8px;padding:12px;margin-bottom:8px}
+  .pedido-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+  .pedido-total{font-weight:bold;color:#4f46e5}
+  .pedido-items{font-size:12px;color:#b7b7c2}
+  .pedido-time{font-size:11px;color:#9aa0a6}
+
+  /* imprimible */
+  #print-target{display:none}
+  .ticket{width:var(--paper-width);padding:0;font-family:var(--body-font);color:#000;background:#fff}
+  .t-wrap{padding:8px}.t-center{text-align:center}.t-right{text-align:right}.t-mono{font-family:var(--body-font)}
+  .t-title{font-weight:700;font-size:14px}.t-sub{font-size:10px}.t-line{border-top:1px dashed #000;margin:6px 0}
+  .t-row{display:flex;justify-content:space-between;gap:6px;font-size:11px}
+  .t-items{width:100%;border-collapse:collapse;font-size:11px}.t-items td{padding:2px 0;vertical-align:top}.t-items .desc{width:60%}
+  .t-total{font-size:13px;font-weight:700;margin-top:6px;padding-top:6px;border-top:2px solid #000}.t-note{font-size:9px;margin-top:8px;text-align:center}
+
+  /* Loader styles */
+  .loader-overlay{
+    position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(11,11,12,0.8);z-index:9999;
+    display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)
+  }
+  .loader-container{
+    background:#131316;border:1px solid #2a2a2e;border-radius:16px;padding:32px;text-align:center;
+    box-shadow:0 20px 25px -5px rgba(0,0,0,0.3),0 10px 10px -5px rgba(0,0,0,0.1)
+  }
+  .loader-spinner{
+    width:40px;height:40px;border:4px solid #2a2a2e;border-top:4px solid #4f46e5;border-radius:50%;
+    animation:spin 1s linear infinite;margin:0 auto 16px
+  }
+  .loader-text{
+    color:#eaeaea;font-size:16px;font-weight:600;margin:0
+  }
+  .loader-subtext{
+    color:#b7b7c2;font-size:14px;margin:8px 0 0;opacity:0.8
+  }
+  @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+  .loader-hidden{display:none!important}
+  .app-loading{opacity:0.3;pointer-events:none}
+
+  @media print{
+    body{background:#fff;padding:0;margin:0}.app{display:none}#print-target{display:block}
+    @page{ size:58mm auto; margin:3mm }
+  }
+</style>
 </head>
 <body>
-  <div class="app">
-    <div class="card header-card">
-      <h1>Generador de Ticket de Los Tilos</h1>
-      <img src="logotilos.png" alt="Los Tilos" style="width: 100%; max-width: 250px; height: auto;">
-    </div>
+<div class="app app-loading">
+  <div class="card header-card">
+    <h1>Los Tilos – POS</h1>
+    <img src="logotilos.png" alt="Los Tilos" style="width:100%;max-width:140px;height:auto">
+  </div>
 
-    <!-- Datos del comercio -->
-    <div class="card">
-      <h2 style="margin:0 0 8px; font-size:16px">Datos del comercio</h2>
-      <div class="row">
-        <div class="col-6">
-          <label>Nombre del comercio</label>
-          <input id="negocio" type="text" placeholder="Pizzería de la Esquina" />
-        </div>
-        <div class="col-6">
-          <label>Dirección</label>
-          <input id="direccion" type="text" />
-        </div>
-        <div class="col-6">
-          <label>CUIT</label>
-          <input id="cuit" type="text" />
-        </div>
-        <div class="col-6">
-          <label>Condición frente al IVA</label>
-          <input id="condicion" type="text" />
-        </div>
-      </div>
+  <!-- Tabs -->
+  <div class="card">
+    <div class="tabs">
+      <button class="tabbtn active" data-tab="ventas">Ventas</button>
+      <button class="tabbtn" data-tab="comercio">Datos Comercio</button>
+      <button class="tabbtn" data-tab="precios">Precios</button>
+      <button class="tabbtn" data-tab="historial">Historial / Caja</button>
     </div>
+  </div>
 
-    <!-- Carga de ítems -->
+  <!-- Ventas -->
+  <div class="tab active" id="ventas">
     <div class="card">
-      <h2 style="margin:0 0 8px; font-size:16px">Agregar ítem</h2>
+      <h2 style="margin:0 0 8px;font-size:16px">Agregar desde catálogo</h2>
       <div class="row">
-        <div class="col-6">
-          <label>Nombre</label>
-          <input id="item-nombre" type="text" placeholder="Muzzarella" />
+        <div class="col-4">
+          <label>Categoría</label>
+          <select id="cat"></select>
         </div>
-        <div class="col-3">
-          <label>Precio (unidad)</label>
-          <input id="item-precio" type="number" step="0.01" min="0" placeholder="0.00" />
+
+        <!-- Pizzas -->
+        <div class="col-4 pizza-only">
+          <label>Variedad A</label>
+          <select id="pizzaA"></select>
         </div>
+        <div class="col-2 pizza-only">
+          <label>Tamaño</label>
+          <select id="size"></select>
+        </div>
+        <div class="col-2 pizza-only">
+          <label>Mitad y mitad</label>
+          <select id="mitad">
+            <option value="no">No</option>
+            <option value="si">Sí</option>
+          </select>
+        </div>
+        <div class="col-4 pizza-only" id="pizzaB-wrap" style="display:none">
+          <label>Variedad B</label>
+          <select id="pizzaB"></select>
+        </div>
+
+        <!-- Otros -->
+        <div class="col-6 other-only" style="display:none">
+          <label>Ítem</label>
+          <select id="itemName"></select>
+        </div>
+
         <div class="col-3">
           <label>Cantidad</label>
-          <input id="item-cantidad" type="number" step="1" min="1" placeholder="1" />
+          <input id="qtyCat" type="number" min="1" step="1" value="1">
         </div>
-      </div>
-      <div style="margin-top:10px; display:flex; gap:8px">
-        <button class="btn primary" id="btn-agregar">Agregar nuevo campo</button>
-        <button class="btn ghost" id="btn-limpiar">Vaciar lista</button>
-      </div>
-
-      <table class="items" id="tabla-items" aria-label="Listado">
-        <thead>
-          <tr><th>Ítem</th><th>Subtotal</th></tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-
-      <div class="total">
-        <div>Total:</div>
-        <div id="total-valor">$ 0,00</div>
+        <div class="col-3" style="display:flex;align-items:end">
+          <button class="btn primary" id="btn-add-catalogo">Agregar</button>
+        </div>
       </div>
     </div>
 
-    <!-- Acciones -->
-    <div class="card" style="display:flex; gap:8px; align-items:center; justify-content:space-between">
-      <div>
-        <button class="btn" id="btn-guardar">Guardar datos</button>
-        <button class="btn" id="btn-restaurar">Restaurar guardado</button>
-      </div>
-      <div>
+    <!-- Carrito -->
+    <div class="card">
+      <h2 style="margin:0 0 8px;font-size:16px">Ítems del ticket</h2>
+      <table class="items" id="tabla-items"><thead><tr><th>Ítem</th><th>Subtotal</th></tr></thead><tbody></tbody></table>
+      <div class="total"><div>Total:</div><div id="total-valor">$ 0,00</div></div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px">
+        <button class="btn" id="btn-vaciar">Vaciar</button>
+        <button class="btn primary" id="btn-confirmar">Confirmar & Guardar Pedido</button>
         <button class="btn primary" id="btn-imprimir">Imprimir ticket</button>
       </div>
     </div>
   </div>
 
-  <!-- Área que se imprime -->
-  <div id="print-target">
-    <div class="ticket" id="ticket">
-      <!-- se completa por JS -->
+  <!-- Datos Comercio -->
+  <div class="tab" id="comercio">
+    <div class="card">
+      <h2 style="margin:0 0 8px;font-size:16px">Datos del comercio</h2>
+      <div class="card" style="background:#1a1a1e;border-color:#059669;margin-bottom:16px;">
+        <p><strong>Información:</strong></p>
+        <ul style="margin:8px 0;padding-left:20px;">
+          <li>Estos datos aparecerán en todos los tickets que imprimas</li>
+          <li>Los datos se guardan automáticamente en tu navegador</li>
+          <li>Puedes modificar la información en cualquier momento</li>
+        </ul>
+      </div>
+      <div class="row">
+        <div class="col-6"><label>Nombre del comercio</label><input id="negocio" type="text" /></div>
+        <div class="col-6"><label>Dirección</label><input id="direccion" type="text" /></div>
+        <div class="col-6"><label>CUIT</label><input id="cuit" type="text" /></div>
+        <div class="col-6"><label>Condición frente al IVA</label><input id="condicion" type="text" /></div>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">
+        <button class="btn" id="btn-guardar-local">Guardar datos comercio</button>
+      </div>
     </div>
   </div>
 
-<script>
-(function(){
-  // ——— Utilidades ———
-  const $ = sel => document.querySelector(sel);
-  const fmt = new Intl.NumberFormat("es-AR", {style:"currency", currency:"ARS", minimumFractionDigits:2});
-  const state = { negocio:"", direccion:"", cuit:"", condicion:"", items:[] };
+  <!-- Precios -->
+  <div class="tab" id="precios">
+    <div class="card">
+      <h2 style="margin:0 0 8px;font-size:16px">Gestión de Precios</h2>
+      <div class="toolbar">
+        <div>
+          <button class="btn" id="init-precios">Inicializar catálogo con precios en $0</button>
+          <button class="btn primary" id="auto-set-precios" style="background: #059669; border-color: #059669;">🚀 Auto-setear precios desde menú</button>
+        </div>
+        <div>
+          <button class="btn" id="reload-precios">Recargar precios</button>
+          <button class="btn primary" id="save-precios">Guardar todos los cambios</button>
+        </div>
+      </div>
+      <div class="card" style="background:#1a1a1e;border-color:#4f46e5;">
+        <p><strong>Instrucciones:</strong></p>
+        <ul style="margin:8px 0;padding-left:20px;">
+          <li><strong>🚀 NUEVO:</strong> Haz clic en "Auto-setear precios desde menú" para cargar automáticamente todos los precios del menú de Los Tilos</li>
+          <li>Si es la primera vez, haz clic en "Inicializar catálogo" para crear todos los productos con precio $0</li>
+          <li>Modifica los precios según corresponda si necesitas ajustes</li>
+          <li>Haz clic en "Guardar todos los cambios" para actualizar la base de datos</li>
+          <li>Los precios se aplicarán automáticamente en el sistema de facturación</li>
+        </ul>
+      </div>
+      <div id="precios-root"></div>
+    </div>
+  </div>
 
-  // Prefills solicitados por vos
-  const DEFAULTS = {
-    negocio: "Pizzería (editar)",
-    direccion: "Av. 59 2422, Necochea",
-    cuit: "20-22531500-1",
-    condicion: "Monotributista – Categoría E"
+  <!-- Historial -->
+  <div class="tab" id="historial">
+    <div class="card">
+      <h2 style="margin:0 0 8px;font-size:16px">Caja & Historial</h2>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0">
+        <button class="btn" id="btn-refrescar-dias">Actualizar días</button>
+        <button class="btn" id="btn-cerrar-caja">Cerrar caja de hoy</button>
+      </div>
+      <div class="historial-grid">
+        <div>
+          <h3>Días</h3>
+          <ul id="lista-dias" class="dias-list"></ul>
+        </div>
+        <div>
+          <h3>Pedidos del día seleccionado</h3>
+          <div id="detalle-dia" class="muted">Elegí un día para ver.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Área que se imprime -->
+<div id="print-target"><div class="ticket" id="ticket"></div></div>
+
+<!-- Loader -->
+<div id="loader" class="loader-overlay">
+  <div class="loader-container">
+    <div class="loader-spinner"></div>
+    <p class="loader-text" id="loader-text">Cargando aplicación...</p>
+    <p class="loader-subtext" id="loader-subtext">Conectando con la base de datos</p>
+  </div>
+</div>
+
+<script type="module">
+  // Firebase
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, doc, getDoc, setDoc, collection, addDoc, serverTimestamp, query, where, getDocs, updateDoc, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDjI19hPA7RdxjEfLbpNkK2nmRJohPh4Lg",
+    authDomain: "lostilos-67059.firebaseapp.com",
+    projectId: "lostilos-67059",
+    storageBucket: "lostilos-67059.firebasestorage.app",
+    messagingSenderId: "135885417021",
+    appId: "1:135885417021:web:054324e4351093db37d854"
+  };
+  const app = initializeApp(firebaseConfig);
+  const db = initializeFirestore(app, {
+    localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
+  });
+
+  // --- Catálogo nombres ---
+  const catalog = {
+    pizzas: ["Pizzaiola s/mozza","Fugazza s/mozza","Anchoas s/mozza","Provolone s/mozza","Mozzarella","Mozza y provenzal","Mozza y rucula","Mozza y aceitunas picadas","Mozza y albahaca fresca","Mozza y anchoas","Mozza y jamon","Mozza y panceta","Mozza y roquefort","Mozza jamon y albahaca","Mozza jamon y huevo duro","Mozza jamon y morron","Mozza jamon y roquefort","Mozza panceta y albahaca","Mozza rucula y provolone fresco","Mozza salchicha y mostaza","Mozza y longaniza a la española","Mozza jamon y anana","Mozza panceta y morron","Mozza tomate rucula y provolone fresco","Mozza y champignones","Mozza y provolone gratinado","Mozza champignones ajo y albahaca","Mozza esparragos y provolone gratinado","Mozza espinaca y provolone gratinado","Mozza jamon y palmitos","Mozza panceta y huevo frito","Mozza provol.grat.jamon crudo y rucula","Mozza y pollo salteado en salsa de barbacoa","Mozza brocoli y provolone gratinado","Napolitana (rod de tomate)","Napolitana ajo y panceta","Napolitana y albahaca","Napolitana y jamon","4 quesos","Americana (mozza y cebolla)","Americana y jamon","Americana y panceta","Americana provolone gratinado","Americana jamon y morron","Americana provolone grat.y jamon","Americana provolone grat.y panceta","Americana verdeo y panceta","Americana verdeo y roquefort","4 sabores a elección"],
+    empanadas_faina:["Carne suave","Carne picante","J y Q","Pollo","Humita","Verdura","Cebolla y queso","Apio y roquefort","Los Tilos","Faina","Faina napolitana","Faina americana"],
+    bebidas_sin_alcohol:["Agua","Agua con gas","Coca Cola 350","Coca Cola Diet 350","Sprite 350","Sprite Diet 350","Fanta 350","Tonica 350","Saborizada manzana 500","Saborizada naranja 500","Saborizada pomelo 500","Coca Cola 1,5 lts","Sprite 1,5 lts"],
+    cervezas:["Wasteiner Lts","Heineken Lts","Lata Imperial Rubia","Lata Imperial Roja 500","Lata Imperial Negra 500","Lata Imperial Ipa 500","Lata Imperial Apa 500"],
+    vinos:["Vasco Viejo tinto 750","Sta. Julia tinto 750","Alamos tinto 750","Copa de vino (Las Perdices)","Sta Julia tinto 375","Sta. Julia Chenin 750","Sta.Julia Chard. 750","Elementos Torr. 750","Blanco 375"],
+    postres:["Casata","Almendrado","Bombon Suizo","Palito Bombon DDL","Mousse de Chocolate","Tiramisu"],
+    otros:["Pancho con pan de pizza"]
   };
 
-  // ——— Cargar / Guardar ———
-  function loadSaved(){
-    const saved = localStorage.getItem("ticket-pizzeria");
-    if(!saved) return;
-    try{
-      const obj = JSON.parse(saved);
-      Object.assign(state, obj);
-      // pintar en inputs
-      $("#negocio").value = state.negocio || DEFAULTS.negocio;
-      $("#direccion").value = state.direccion || DEFAULTS.direccion;
-      $("#cuit").value     = state.cuit || DEFAULTS.cuit;
-      $("#condicion").value= state.condicion || DEFAULTS.condicion;
-      renderItems();
-    }catch(e){ console.warn(e); }
-  }
-  function save(){
-    // tomar inputs
-    state.negocio  = $("#negocio").value || DEFAULTS.negocio;
-    state.direccion= $("#direccion").value || DEFAULTS.direccion;
-    state.cuit     = $("#cuit").value || DEFAULTS.cuit;
-    state.condicion= $("#condicion").value || DEFAULTS.condicion;
-    localStorage.setItem("ticket-pizzeria", JSON.stringify(state));
+  const fmt = new Intl.NumberFormat("es-AR",{style:"currency",currency:"ARS",minimumFractionDigits:2});
+  const $ = s => document.querySelector(s);
+  const state = { negocio:"", direccion:"", cuit:"", condicion:"", items:[] };
+  const DEFAULTS = { negocio:"Los Tilos Pizza", direccion:"Av. 59 2422, Necochea", cuit:"20-22531500-1", condicion:"Monotributista – Categoría E" };
+
+  // --- Loader functions ---
+  function showLoader(text = "Cargando...", subtext = "Por favor espera") {
+    const loader = $("#loader");
+    const loaderText = $("#loader-text");
+    const loaderSubtext = $("#loader-subtext");
+    
+    loaderText.textContent = text;
+    loaderSubtext.textContent = subtext;
+    loader.classList.remove("loader-hidden");
+    
+    // Deshabilitar todos los botones
+    document.querySelectorAll("button").forEach(btn => {
+      btn.disabled = true;
+      btn.style.opacity = "0.6";
+    });
   }
 
-  // ——— Ítems ———
-  function addItem(){
-    const nombre = $("#item-nombre").value.trim();
-    const precio = parseFloat($("#item-precio").value);
-    const cantidad = parseInt($("#item-cantidad").value, 10);
+  function hideLoader() {
+    const loader = $("#loader");
+    loader.classList.add("loader-hidden");
+    
+    // Rehabilitar todos los botones
+    document.querySelectorAll("button").forEach(btn => {
+      btn.disabled = false;
+      btn.style.opacity = "1";
+    });
+  }
 
-    if(!nombre || isNaN(precio) || isNaN(cantidad) || cantidad <= 0){
-      alert("Completá nombre, precio y cantidad (cantidad ≥ 1).");
-      return;
+  // Wrapper para operaciones async con loader
+  async function withLoader(asyncFunction, loadingText = "Cargando...", loadingSubtext = "Por favor espera") {
+    try {
+      showLoader(loadingText, loadingSubtext);
+      const result = await asyncFunction();
+      return result;
+    } catch (error) {
+      console.error("Error en operación:", error);
+      throw error;
+    } finally {
+      hideLoader();
     }
-
-    state.items.push({nombre, precio, cantidad, subtotal: +(precio * cantidad).toFixed(2)});
-    $("#item-nombre").value = "";
-    $("#item-precio").value = "";
-    $("#item-cantidad").value = "";
-    renderItems();
   }
 
-  function removeItem(idx){
-    state.items.splice(idx, 1);
-    renderItems();
-  }
+  // --- Tabs ---
+  document.querySelectorAll(".tabbtn").forEach(b=>{
+    b.onclick=()=>{
+      document.querySelectorAll(".tabbtn").forEach(x=>x.classList.remove("active"));
+      b.classList.add("active");
+      document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
+      document.getElementById(b.dataset.tab).classList.add("active");
+      
+      // Cargar precios cuando se cambie al tab de precios
+      if(b.dataset.tab === "precios"){
+        renderPrecios();
+      }
+      
+      // Cargar datos del comercio cuando se cambie al tab de comercio
+      if(b.dataset.tab === "comercio"){
+        loadLocal();
+      }
+    };
+  });
 
+  // --- Cargar precios desde Firestore ---
+  async function loadPrices(){
+    try {
+      const docs = ["pizzas","empanadas_faina","bebidas_sin_alcohol","cervezas","vinos","postres","otros"];
+      const out = {};
+      
+      // Cargar todos los documentos en paralelo para mayor velocidad
+      const promises = docs.map(async (d) => {
+        try {
+          const snap = await getDoc(doc(db,"prices",d));
+          return { key: d, data: snap.exists() ? snap.data() : {} };
+        } catch (error) {
+          console.warn(`Error cargando precios de ${d}:`, error);
+          return { key: d, data: {} };
+        }
+      });
+      
+      const results = await Promise.all(promises);
+      results.forEach(({ key, data }) => {
+        out[key] = data;
+      });
+      
+      return out;
+    } catch (error) {
+      console.error("Error cargando precios:", error);
+      // Retornar estructura vacía en caso de error
+      return {
+        pizzas: {},
+        empanadas_faina: {},
+        bebidas_sin_alcohol: {},
+        cervezas: {},
+        vinos: {},
+        postres: {},
+        otros: {}
+      };
+    }
+  }
+  let PRICES = await loadPrices();
+
+  // --- UI catálogo ---
+  const catMap = {"Pizzas":"pizzas","Empanadas/Fainá":"empanadas_faina","Bebidas":"bebidas_sin_alcohol","Cervezas":"cervezas","Vinos":"vinos","Postres":"postres","Otros":"otros"};
+  const catSelect = $("#cat"); Object.keys(catMap).forEach(k=>catSelect.add(new Option(k,catMap[k])));
+
+  function fillPizzas(){
+    const a=$("#pizzaA"), b=$("#pizzaB"), mitad=$("#mitad").value==="si";
+    const list = mitad ? catalog.pizzas.filter(n=>n!=="4 sabores a elección") : catalog.pizzas;
+    a.innerHTML=""; b.innerHTML="";
+    for(const n of list){ a.add(new Option(n,n)); b.add(new Option(n,n)); }
+    updateSizes();
+    $("#pizzaB-wrap").style.display = mitad ? "" : "none";
+  }
+  
+  function updateSizes(){
+    const a=$("#pizzaA"), size=$("#size"), mitad=$("#mitad").value==="si";
+    size.innerHTML="";
+    const selectedPizza = a.value;
+    const sizeOptions = mitad ? ["GDE","MED"] : (selectedPizza==="4 sabores a elección" ? ["GDE"] : ["GDE","MED","CHI"]);
+    sizeOptions.forEach(s=>size.add(new Option(s,s)));
+  }
+  function fillOther(catKey){
+    const el=$("#itemName"); el.innerHTML="";
+    for(const n of catalog[catKey]) el.add(new Option(n,n));
+  }
+  function onCatChange(){
+    const catKey=catSelect.value, isPizza=catKey==="pizzas";
+    document.querySelectorAll(".pizza-only").forEach(e=>e.style.display=isPizza?"":"none");
+    document.querySelectorAll(".other-only").forEach(e=>e.style.display=isPizza?"none":"");
+    if(isPizza) fillPizzas(); else fillOther(catKey);
+  }
+  $("#mitad").onchange=fillPizzas; $("#pizzaA").onchange=updateSizes; catSelect.onchange=onCatChange; onCatChange();
+
+  // --- Precios helpers ---
+  const pricePizzaEntera=(name,size)=>Number(PRICES.pizzas?.[name]?.[size] ?? 0);
+  const pricePizzaMitad=(a,b,size)=>0.5*pricePizzaEntera(a,size)+0.5*pricePizzaEntera(b,size);
+
+  // --- Carrito ---
   function renderItems(){
-    const tbody = $("#tabla-items tbody");
-    tbody.innerHTML = "";
-    let total = 0;
+    const tb=$("#tabla-items tbody"); tb.innerHTML=""; let total=0;
+    state.items.forEach((it,i)=>{ total+=it.subtotal;
+      const tr=document.createElement("tr");
+      tr.innerHTML=`<td><div><strong>${it.nombre}</strong></div><div class="muted">${it.cantidad} × ${fmt.format(it.precio)}</div>
+        <button class="btn" style="padding:4px 8px;margin-top:4px" data-del="${i}">Eliminar</button></td>
+        <td>${fmt.format(it.subtotal)}</td>`;
+      tb.appendChild(tr);
+    });
+    $("#total-valor").textContent=fmt.format(total);
+  }
+  document.getElementById("tabla-items").addEventListener("click",(e)=>{
+    const btn=e.target.closest("[data-del]"); if(btn){ state.items.splice(parseInt(btn.dataset.del,10),1); renderItems(); }
+  });
 
-    state.items.forEach((it, i)=>{
-      total += it.subtotal;
+  function pushItem({cat,nombre,precio,cantidad,size}){
+    const subtotal=+(precio*cantidad).toFixed(2);
+    // Solo incluir size si no es undefined
+    const item = {cat,nombre,precio,cantidad,subtotal};
+    if(size !== undefined) item.size = size;
+    state.items.push(item);
+    renderItems();
+  }
+  function addFromCatalog(){
+    const catKey=catSelect.value, qty=Math.max(1, parseInt($("#qtyCat").value||"1",10));
+    if(catKey==="pizzas"){
+      const mitad=$("#mitad").value==="si"; const a=$("#pizzaA").value; const size=$("#size").value;
+      if(mitad){
+        const b=$("#pizzaB").value; if(size==="CHI"){alert("Mitad y mitad solo GDE/MED"); return;}
+        const unit=pricePizzaMitad(a,b,size);
+        pushItem({cat:"pizzas", nombre:`Pizza ${size} mitad ${a} / mitad ${b}`, precio:unit, cantidad:qty, size});
+      }else{
+        if(a==="4 sabores a elección" && size!=="GDE"){ alert("4 sabores: solo GDE"); return; }
+        const unit=pricePizzaEntera(a,size);
+        pushItem({cat:"pizzas", nombre:`Pizza ${size} ${a}`, precio:unit, cantidad:qty, size});
+      }
+    }else{
+      const name=$("#itemName").value; const unit=Number(PRICES[catKey]?.[name] ?? 0);
+      pushItem({cat:catKey, nombre:name, precio:unit, cantidad:qty});
+    }
+  }
+  $("#btn-add-catalogo").onclick=addFromCatalog;
+  $("#btn-vaciar").onclick=()=>{ if(confirm("¿Vaciar ítems?")){ state.items=[]; renderItems(); } };
+
+  // --- Datos comercio (localStorage) ---
+  function saveLocal(){
+    state.negocio=$("#negocio").value||DEFAULTS.negocio;
+    state.direccion=$("#direccion").value||DEFAULTS.direccion;
+    state.cuit=$("#cuit").value||DEFAULTS.cuit;
+    state.condicion=$("#condicion").value||DEFAULTS.condicion;
+    localStorage.setItem("lt-ticket", JSON.stringify({ ...state, items: state.items }));
+  }
+  $("#btn-guardar-local").onclick=()=>{ saveLocal(); alert("Datos guardados en este navegador."); };
+  function loadLocal(showLoaderFlag = false){
+    if(showLoaderFlag) {
+      showLoader("Cargando datos", "Restaurando configuración local...");
+      setTimeout(() => {
+        loadLocalData();
+        hideLoader();
+      }, 300);
+    } else {
+      loadLocalData();
+    }
+  }
+  
+  function loadLocalData(){
+    try{ const s=JSON.parse(localStorage.getItem("lt-ticket")||"{}"); Object.assign(state,s);}catch{}
+    $("#negocio").value=state.negocio||DEFAULTS.negocio; $("#direccion").value=state.direccion||DEFAULTS.direccion;
+    $("#cuit").value=state.cuit||DEFAULTS.cuit; $("#condicion").value=state.condicion||DEFAULTS.condicion;
+    renderItems();
+  }
+
+  // --- Ticket imprimible ---
+  function buildTicketHTML(){
+    saveLocal();
+    const now=new Date(); const fecha=now.toLocaleDateString("es-AR"); const hora=now.toLocaleTimeString("es-AR",{hour:"2-digit",minute:"2-digit"});
+    const itemsHTML = state.items.map(it=>`<tr><td class="desc"><div><strong>${it.nombre}</strong></div><div class="t-sub">${it.cantidad} × ${fmt.format(it.precio)}</div></td><td class="t-right">${fmt.format(it.subtotal)}</td></tr>`).join("") || `<tr><td class="desc">— Sin ítems —</td><td class="t-right">$ 0,00</td></tr>`;
+    const total=state.items.reduce((a,b)=>a+b.subtotal,0);
+    return `<div class="t-wrap">
+      <div class="t-center t-title t-mono">${state.negocio||DEFAULTS.negocio}</div>
+      <div class="t-center t-sub">${state.direccion||DEFAULTS.direccion}</div>
+      <div class="t-center t-sub">CUIT: ${state.cuit||DEFAULTS.cuit}</div>
+      <div class="t-center t-sub">${state.condicion||DEFAULTS.condicion}</div>
+      <div class="t-line"></div>
+      <div class="t-row"><div>Ticket informal</div><div>${fecha} ${hora}</div></div>
+      <div class="t-line"></div>
+      <table class="t-items"><tbody>${itemsHTML}</tbody></table>
+      <div class="t-total t-row"><div>TOTAL</div><div>${fmt.format(total)}</div></div>
+      <div class="t-note">Documento no válido como comprobante fiscal</div>
+    </div>`;
+  }
+  $("#btn-imprimir").onclick=()=>{ 
+    showLoader("Preparando ticket", "Generando documento para imprimir...");
+    setTimeout(() => {
+      document.getElementById("ticket").innerHTML=buildTicketHTML(); 
+      window.print(); 
+      hideLoader();
+    }, 500);
+  };
+
+  // --- Gestión de Precios ---
+  function pizzasSeed(){
+    const o={}; for(const n of catalog.pizzas){
+      o[n] = n==="4 sabores a elección" ? {GDE:0} : {GDE:0,MED:0,CHI:0};
+    } return o;
+  }
+  const flatSeed = arr => Object.fromEntries(arr.map(n=>[n,0]));
+
+  async function initCatalogIfEmpty(){
+    return await withLoader(async () => {
+      const check = await getDoc(doc(db,"prices","pizzas"));
+      if (check.exists()){ 
+        if(confirm("Ya hay datos de precios. ¿Quieres sobrescribir todo con valores en $0?")){
+          await setDoc(doc(db,"prices","pizzas"), pizzasSeed());
+          await setDoc(doc(db,"prices","empanadas_faina"), flatSeed(catalog.empanadas_faina));
+          await setDoc(doc(db,"prices","bebidas_sin_alcohol"), flatSeed(catalog.bebidas_sin_alcohol));
+          await setDoc(doc(db,"prices","cervezas"), flatSeed(catalog.cervezas));
+          await setDoc(doc(db,"prices","vinos"), flatSeed(catalog.vinos));
+          await setDoc(doc(db,"prices","postres"), flatSeed(catalog.postres));
+          await setDoc(doc(db,"prices","otros"), flatSeed(catalog.otros));
+          alert("Catálogo reinicializado con valores en $0.");
+          PRICES = await loadPrices();
+          renderPrecios();
+        }
+        return; 
+      }
+      await setDoc(doc(db,"prices","pizzas"), pizzasSeed());
+      await setDoc(doc(db,"prices","empanadas_faina"), flatSeed(catalog.empanadas_faina));
+      await setDoc(doc(db,"prices","bebidas_sin_alcohol"), flatSeed(catalog.bebidas_sin_alcohol));
+      await setDoc(doc(db,"prices","cervezas"), flatSeed(catalog.cervezas));
+      await setDoc(doc(db,"prices","vinos"), flatSeed(catalog.vinos));
+      await setDoc(doc(db,"prices","postres"), flatSeed(catalog.postres));
+      await setDoc(doc(db,"prices","otros"), flatSeed(catalog.otros));
+      alert("Catálogo inicial creado con valores en $0.");
+      PRICES = await loadPrices();
+      renderPrecios();
+    }, "Inicializando catálogo", "Creando productos con precios en $0...");
+  }
+
+  const order = ["pizzas","empanadas_faina","bebidas_sin_alcohol","cervezas","vinos","postres","otros"];
+  const labels = { pizzas:"Pizzas", empanadas_faina:"Empanadas / Fainá", bebidas_sin_alcohol:"Bebidas sin alcohol", cervezas:"Cervezas", vinos:"Vinos", postres:"Postres", otros:"Otros" };
+
+  async function loadAllPrices(){
+    const out = {};
+    for (const c of order){
+      const snap = await getDoc(doc(db,"prices",c));
+      out[c] = snap.exists() ? snap.data() : {};
+    }
+    return out;
+  }
+
+  function renderPrecios(){
+    const root = document.getElementById("precios-root");
+    root.innerHTML = "";
+
+    // Pizzas
+    const cardP = document.createElement("div"); cardP.className="card";
+    cardP.innerHTML = `<h2>${labels.pizzas}</h2>
+      <table class="precios-table"><thead><tr><th>Variedad</th><th>GDE</th><th>MED</th><th>CHI</th></tr></thead><tbody id="tb-pizzas"></tbody></table>`;
+    root.appendChild(cardP);
+    const tbp = cardP.querySelector("#tb-pizzas");
+    Object.entries(PRICES.pizzas||{}).forEach(([name, sizes])=>{
       const tr = document.createElement("tr");
-      const left = document.createElement("td");
-      const right = document.createElement("td");
-
-      left.innerHTML = `
-        <div><strong>${escapeHTML(it.nombre)}</strong></div>
-        <div class="muted">${it.cantidad} × ${fmt.format(it.precio)}</div>
-        <button class="btn ghost danger" style="padding:4px 8px; margin-top:4px" data-del="${i}">Eliminar</button>
-      `;
-      right.textContent = fmt.format(it.subtotal);
-
-      tr.appendChild(left);
-      tr.appendChild(right);
-      tbody.appendChild(tr);
+      tr.innerHTML = `
+        <td>${name}</td>
+        <td><input type="number" value="${sizes.GDE ?? 0}" data-k="prices/pizzas/${name}/GDE"></td>
+        <td><input type="number" value="${sizes.MED ?? 0}" data-k="prices/pizzas/${name}/MED"></td>
+        <td><input type="number" value="${sizes.CHI ?? 0}" data-k="prices/pizzas/${name}/CHI"></td>`;
+      tbp.appendChild(tr);
     });
 
-    $("#total-valor").textContent = fmt.format(total);
+    // Resto
+    for (const c of order.slice(1)){
+      const card = document.createElement("div"); card.className="card";
+      card.innerHTML = `<h2>${labels[c]}</h2>
+        <table class="precios-table"><thead><tr><th>Ítem</th><th>Precio</th></tr></thead><tbody id="tb-${c}"></tbody></table>`;
+      root.appendChild(card);
+      const t = card.querySelector(`#tb-${c}`);
+      Object.entries(PRICES[c]||{}).forEach(([name, price])=>{
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${name}</td><td><input type="number" value="${price ?? 0}" data-k="prices/${c}/${name}"></td>`;
+        t.appendChild(tr);
+      });
+    }
   }
 
-  function escapeHTML(s){
-    return s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  function collectPrices(){
+    const inputs = Array.from(document.querySelectorAll("input[data-k]"));
+    const bundle = {};
+    for(const inp of inputs){
+      const [coll, docId, ...rest] = inp.dataset.k.split("/");
+      const path = `${coll}/${docId}`;
+      bundle[path] = bundle[path] || {};
+      if (rest.length===2){
+        const [name,size] = rest;
+        bundle[path][name] = Object.assign(bundle[path][name]||{}, { [size]: Number(inp.value) });
+      } else {
+        const [name] = rest;
+        bundle[path][name] = Number(inp.value);
+      }
+    }
+    return bundle;
   }
 
-  // ——— Ticket imprimible ———
-  function buildTicketHTML(){
-    // asegurar inputs en state
-    save();
-    const now = new Date();
-    const fecha = now.toLocaleDateString("es-AR");
-    const hora  = now.toLocaleTimeString("es-AR", {hour:"2-digit", minute:"2-digit"});
+  async function saveAllPrices(){
+    return await withLoader(async () => {
+      const patchByDoc = collectPrices();
+      for (const [path, patch] of Object.entries(patchByDoc)){
+        const [, docId] = path.split("/");
+        await setDoc(doc(db,"prices",docId), patch, { merge:true });
+      }
+      PRICES = await loadPrices();
+      alert("Precios guardados correctamente.");
+    }, "Guardando precios", "Actualizando base de datos...");
+  }
 
-    // Cuerpo de ítems
-    const itemsHTML = state.items.map(it=>{
-      const linea1 = `<div><strong>${escapeHTML(it.nombre)}</strong></div>`;
-      const linea2 = `<div class="t-sub">${it.cantidad} × ${fmt.format(it.precio)}</div>`;
-      const right  = `<div class="t-right">${fmt.format(it.subtotal)}</div>`;
-      return `
-        <tr>
-          <td class="desc">
-            ${linea1}
-            ${linea2}
-          </td>
-          <td class="t-right">${fmt.format(it.subtotal)}</td>
-        </tr>`;
-    }).join("");
+  // --- Auto-setear precios desde menú ---
+  async function autoSetPricesFromMenu(){
+    return await withLoader(async () => {
+      // Precios de pizzas (GDE/MED/CHI)
+      const pizzasPrices = {
+        "Pizzaiola s/mozza": {GDE: 14000, MED: 13600, CHI: 7000},
+        "Fugazza s/mozza": {GDE: 14000, MED: 13600, CHI: 7000},
+        "Anchoas s/mozza": {GDE: 20000, MED: 19600, CHI: 10000},
+        "Provolone s/mozza": {GDE: 20000, MED: 19600, CHI: 10000},
+        "Mozzarella": {GDE: 19000, MED: 18600, CHI: 9500},
+        "Mozza y provenzal": {GDE: 21000, MED: 20600, CHI: 10500},
+        "Mozza y rucula": {GDE: 22000, MED: 21600, CHI: 11000},
+        "Mozza y aceitunas picadas": {GDE: 26000, MED: 25600, CHI: 13000},
+        "Mozza y albahaca fresca": {GDE: 26000, MED: 25600, CHI: 13000},
+        "Mozza y anchoas": {GDE: 27000, MED: 26600, CHI: 13500},
+        "Mozza y jamon": {GDE: 27000, MED: 26600, CHI: 13500},
+        "Mozza y panceta": {GDE: 27000, MED: 26600, CHI: 13500},
+        "Mozza y roquefort": {GDE: 27000, MED: 26600, CHI: 13500},
+        "Mozza jamon y albahaca": {GDE: 30000, MED: 29600, CHI: 15000},
+        "Mozza jamon y huevo duro": {GDE: 30000, MED: 29600, CHI: 15000},
+        "Mozza jamon y morron": {GDE: 30000, MED: 29600, CHI: 15000},
+        "Mozza jamon y roquefort": {GDE: 30000, MED: 29600, CHI: 15000},
+        "Mozza panceta y albahaca": {GDE: 30000, MED: 29600, CHI: 15000},
+        "Mozza rucula y provolone fresco": {GDE: 31000, MED: 30600, CHI: 15500},
+        "Mozza salchicha y mostaza": {GDE: 28000, MED: 27600, CHI: 14000},
+        "Mozza y longaniza a la española": {GDE: 28000, MED: 27600, CHI: 14000},
+        "Mozza jamon y anana": {GDE: 31000, MED: 30600, CHI: 15500},
+        "Mozza panceta y morron": {GDE: 31000, MED: 30600, CHI: 15500},
+        "Mozza tomate rucula y provolone fresco": {GDE: 32000, MED: 31600, CHI: 16000},
+        "Mozza y champignones": {GDE: 28000, MED: 27600, CHI: 14000},
+        "Mozza y provolone gratinado": {GDE: 31000, MED: 30600, CHI: 15500},
+        "Mozza champignones ajo y albahaca": {GDE: 31000, MED: 30600, CHI: 15500},
+        "Mozza esparragos y provolone gratinado": {GDE: 32000, MED: 31600, CHI: 16000},
+        "Mozza espinaca y provolone gratinado": {GDE: 32000, MED: 31600, CHI: 16000},
+        "Mozza jamon y palmitos": {GDE: 31000, MED: 30600, CHI: 15500},
+        "Mozza panceta y huevo frito": {GDE: 31000, MED: 30600, CHI: 15500},
+        "Mozza provol.grat.jamon crudo y rucula": {GDE: 32000, MED: 31600, CHI: 16000},
+        "Mozza y pollo salteado en salsa de barbacoa": {GDE: 31000, MED: 30600, CHI: 15500},
+        "Mozza brocoli y provolone gratinado": {GDE: 32000, MED: 31600, CHI: 16000},
+        "Napolitana (rod de tomate)": {GDE: 28000, MED: 27600, CHI: 14000},
+        "Napolitana ajo y panceta": {GDE: 30000, MED: 29700, CHI: 15000},
+        "Napolitana y albahaca": {GDE: 30000, MED: 29700, CHI: 15000},
+        "Napolitana y jamon": {GDE: 30000, MED: 29700, CHI: 15000},
+        "4 quesos": {GDE: 32000, MED: 31600, CHI: 16000},
+        "Americana (mozza y cebolla)": {GDE: 26000, MED: 25600, CHI: 13000},
+        "Americana y jamon": {GDE: 28000, MED: 27600, CHI: 14000},
+        "Americana y panceta": {GDE: 28000, MED: 27600, CHI: 14000},
+        "Americana provolone gratinado": {GDE: 32000, MED: 31600, CHI: 16000},
+        "Americana jamon y morron": {GDE: 32000, MED: 31600, CHI: 16000},
+        "Americana provolone grat.y jamon": {GDE: 33000, MED: 32600, CHI: 16500},
+        "Americana provolone grat.y panceta": {GDE: 33000, MED: 32600, CHI: 16500},
+        "Americana verdeo y panceta": {GDE: 32000, MED: 31600, CHI: 16000},
+        "Americana verdeo y roquefort": {GDE: 32000, MED: 31600, CHI: 16000},
+        "4 sabores a elección": {GDE: 33000}
+      };
 
-    const total = state.items.reduce((a,b)=>a + b.subtotal, 0);
+      // Precios de empanadas/fainá
+      const empanadasPrices = {
+        "Carne suave": 2000,
+        "Carne picante": 2000,
+        "J y Q": 2000,
+        "Pollo": 2000,
+        "Humita": 2000,
+        "Verdura": 2000,
+        "Cebolla y queso": 2000,
+        "Apio y roquefort": 2000,
+        "Los Tilos": 2000,
+        "Faina": 2000,
+        "Faina napolitana": 3500,
+        "Faina americana": 3500
+      };
 
-    return `
-      <div class="t-wrap">
-        <div class="t-center t-title t-mono">${escapeHTML(state.negocio || DEFAULTS.negocio)}</div>
-        <div class="t-center t-sub">${escapeHTML(state.direccion || DEFAULTS.direccion)}</div>
-        <div class="t-center t-sub">CUIT: ${escapeHTML(state.cuit || DEFAULTS.cuit)}</div>
-        <div class="t-center t-sub">${escapeHTML(state.condicion || DEFAULTS.condicion)}</div>
-        <div class="t-line"></div>
-        <div class="t-row"><div>Fecha y hora</div><div>${fecha} ${hora}</div></div>
-        <div class="t-line"></div>
+      // Precios de bebidas sin alcohol
+      const bebidasPrices = {
+        "Agua": 2800,
+        "Agua con gas": 2800,
+        "Coca Cola 350": 3000,
+        "Coca Cola Diet 350": 3000,
+        "Sprite 350": 3000,
+        "Sprite Diet 350": 3000,
+        "Fanta 350": 3000,
+        "Tonica 350": 3000,
+        "Saborizada manzana 500": 3300,
+        "Saborizada naranja 500": 3300,
+        "Saborizada pomelo 500": 3300,
+        "Coca cola 1,5 lts": 7000,
+        "Sprite 1,5 lts": 7000
+      };
 
-        <table class="t-items" aria-label="Items">
-          <tbody>
-            ${itemsHTML || `<tr><td class="desc">— Sin ítems —</td><td class="t-right">$ 0,00</td></tr>`}
-          </tbody>
-        </table>
+      // Precios de cervezas
+      const cervezasPrices = {
+        "Wasteiner Lts": 8000,
+        "Heineken Lts": 9000,
+        "Lata Imperial Rubia": 4500,
+        "Lata Imperial Roja 500": 4500,
+        "Lata Imperial Negra 500": 4500,
+        "Lata Imperial Ipa 500": 4500,
+        "Lata Imperial Apa 500": 4500
+      };
 
-        <div class="t-total t-row">
-          <div>TOTAL</div>
-          <div>${fmt.format(total)}</div>
-        </div>
+      // Precios de vinos
+      const vinosPrices = {
+        "Vasco Viejo tinto 750": 7000,
+        "Sta. Julia tinto 750": 10000,
+        "Alamos tinto 750": 14000,
+        "Copa de vino (Las Perdices)": 5000,
+        "Sta Julia tinto 375": 8000,
+        "Sta. Julia Chenin 750": 11000,
+        "Sta.Julia Chard. 750": 10000,
+        "Elementos Torr. 750": 10000,
+        "Blanco 375": 8000
+      };
 
-        <div class="t-note">Documento no válido como comprobante fiscal</div>
-      </div>
+      // Precios de postres
+      const postresPrices = {
+        "Casata": 4500,
+        "Almendrado": 4500,
+        "Bombon Suizo": 4500,
+        "Palito Bombon DDL": 4000,
+        "Mousse de Chocolate": 7500,
+        "Tiramisu": 7500
+      };
+
+      // Precios de otros
+      const otrosPrices = {
+        "Pancho con pan de pizza": 4000
+      };
+
+      // Guardar todos los precios en Firebase
+      await setDoc(doc(db, "prices", "pizzas"), pizzasPrices);
+      await setDoc(doc(db, "prices", "empanadas_faina"), empanadasPrices);
+      await setDoc(doc(db, "prices", "bebidas_sin_alcohol"), bebidasPrices);
+      await setDoc(doc(db, "prices", "cervezas"), cervezasPrices);
+      await setDoc(doc(db, "prices", "vinos"), vinosPrices);
+      await setDoc(doc(db, "prices", "postres"), postresPrices);
+      await setDoc(doc(db, "prices", "otros"), otrosPrices);
+
+      // Recargar precios y actualizar UI
+      PRICES = await loadPrices();
+      renderPrecios();
+      
+      alert("¡Precios actualizados automáticamente desde el menú!");
+    }, "Actualizando precios", "Cargando precios del menú...");
+  }
+
+  // Event listeners para precios
+  document.getElementById("init-precios").onclick = initCatalogIfEmpty;
+  document.getElementById("auto-set-precios").onclick = autoSetPricesFromMenu;
+  document.getElementById("reload-precios").onclick = async ()=>{await withLoader(async ()=>{PRICES = await loadPrices(); renderPrecios();}, "Recargando precios", "Cargando desde base de datos...");};
+  document.getElementById("save-precios").onclick = saveAllPrices;
+
+  // --- Caja & Pedidos ---
+  const dayKeyFrom=d=>new Date(d.getFullYear(),d.getMonth(),d.getDate()).toISOString().slice(0,10);
+
+  async function ensureCajaAbierta(){
+    const qOpen=query(collection(db,"cajas"), where("open","==",true));
+    const snap=await getDocs(qOpen);
+    if(!snap.empty) return snap.docs[0];
+    const dayKey=dayKeyFrom(new Date());
+    const ref=await addDoc(collection(db,"cajas"),{open:true,startedAt:serverTimestamp(),dayKey});
+    const q2=query(collection(db,"cajas"), where("__name__","==",ref.id));
+    return (await getDocs(q2)).docs[0];
+  }
+
+  async function confirmarGuardarPedido(){
+    if(state.items.length===0){ alert("No hay ítems."); return; }
+    return await withLoader(async () => {
+    const caja=await ensureCajaAbierta();
+    const dayKey=caja.data().dayKey;
+    const total=state.items.reduce((a,b)=>a+b.subtotal,0);
+    
+    // Limpiar items para eliminar campos undefined
+    const cleanItems = state.items.map(item => {
+      const cleanItem = {};
+      Object.keys(item).forEach(key => {
+        if (item[key] !== undefined) {
+          cleanItem[key] = item[key];
+        }
+      });
+      return cleanItem;
+    });
+    
+    await addDoc(collection(db,"orders"),{createdAt:serverTimestamp(),dayKey,items:cleanItems,total});
+    alert("Pedido guardado.");
+    }, "Guardando pedido", "Procesando en base de datos...");
+  }
+  $("#btn-confirmar").onclick=confirmarGuardarPedido;
+
+  async function cerrarCaja(){
+    return await withLoader(async () => {
+    const qOpen=query(collection(db,"cajas"), where("open","==",true));
+    const snap=await getDocs(qOpen);
+    if(snap.empty){ alert("No hay caja abierta."); return; }
+    const caja=snap.docs[0]; const dayKey=caja.data().dayKey;
+
+    const qOrd=query(collection(db,"orders"), where("dayKey","==",dayKey));
+    const sOrd=await getDocs(qOrd);
+    let total=0,count=0,byCat={};
+    const pedidosDetalle = [];
+    
+    sOrd.forEach(d=>{ 
+      const o=d.data(); 
+      total+=o.total; 
+      count++; 
+      (o.items||[]).forEach(i=>{ byCat[i.cat]=(byCat[i.cat]||0)+i.subtotal; });
+      pedidosDetalle.push({
+        id: d.id,
+        total: o.total,
+        items: o.items || [],
+        createdAt: o.createdAt
+      });
+    });
+
+    // Guardar resumen diario con detalles completos
+    await setDoc(doc(db,"daily",dayKey),{
+      dayKey,
+      total,
+      cantidadPedidos:count,
+      categorias:byCat,
+      pedidosDetalle,
+      closedAt: serverTimestamp()
+    }, {merge:true});
+    
+    await updateDoc(doc(db,"cajas",caja.id),{open:false,closedAt:serverTimestamp()});
+    alert("Caja cerrada.");
+    await cargarDias();
+    }, "Cerrando caja", "Procesando resumen diario...");
+  }
+  $("#btn-cerrar-caja").onclick=cerrarCaja;
+
+  // --- Historial UI mejorado ---
+  async function cargarDias(showLoaderFlag = true){
+    if(showLoaderFlag) {
+      return await withLoader(async () => {
+        await loadDiasData();
+      }, "Cargando historial", "Obteniendo datos de días...");
+    } else {
+      await loadDiasData();
+    }
+  }
+  
+  async function loadDiasData(){
+    try {
+      // Usar query con límite para evitar cargar demasiados datos
+      const q = query(collection(db,"daily"), orderBy("dayKey", "desc"));
+      const s = await getDocs(q);
+      const ul = $("#lista-dias"); 
+      ul.innerHTML = "";
+      
+      // Limitar a los últimos 30 días para mejorar rendimiento
+      const arr = s.docs.slice(0, 30).map(d => d.data());
+      
+      if (arr.length === 0) {
+        ul.innerHTML = '<li class="muted">No hay datos de ventas disponibles</li>';
+        return;
+      }
+      
+      // Crear elementos de forma más eficiente
+      const fragment = document.createDocumentFragment();
+      for(const d of arr){
+        const li = document.createElement("li");
+        li.innerHTML = `<button class="btn" data-d="${d.dayKey}">${d.dayKey} – ${fmt.format(d.total||0)} (${d.cantidadPedidos||0} pedidos)</button>`;
+        fragment.appendChild(li);
+      }
+      ul.appendChild(fragment);
+      
+    } catch (error) {
+      console.error("Error cargando días:", error);
+      const ul = $("#lista-dias");
+      ul.innerHTML = '<li class="muted">Error al cargar datos de ventas</li>';
+    }
+  }
+  
+  $("#lista-dias").onclick=async e=>{
+    const b=e.target.closest("button[data-d]"); if(!b) return;
+    const dayKey=b.dataset.d;
+    
+    await withLoader(async () => {
+    // Obtener datos del día
+    const dayDoc = await getDoc(doc(db,"daily",dayKey));
+    const dayData = dayDoc.data();
+    
+    if(!dayData || !dayData.pedidosDetalle){
+      // Fallback: cargar desde orders si no hay pedidosDetalle
+      const qOrd=query(collection(db,"orders"), where("dayKey","==",dayKey), orderBy("createdAt","asc"));
+      const s=await getDocs(qOrd);
+      const cont=[]; 
+      s.forEach(d=>{ 
+        const o=d.data(); 
+        const lines=(o.items||[]).map(i=>`• ${i.cantidad}× ${i.nombre} – ${fmt.format(i.subtotal)}`).join("\n"); 
+        cont.push(`Pedido: ${fmt.format(o.total)}\n${lines}`); 
+      });
+      $("#detalle-dia").innerHTML = cont.join("\n\n") || "Sin pedidos.";
+      return;
+    }
+    
+    // Mostrar detalles con mejor formato
+    const detalle = document.getElementById("detalle-dia");
+    detalle.innerHTML = "";
+    
+    // Resumen del día
+    const resumen = document.createElement("div");
+    resumen.className = "card";
+    resumen.innerHTML = `
+      <h3>Resumen del ${dayKey}</h3>
+      <p><strong>Total vendido:</strong> ${fmt.format(dayData.total || 0)}</p>
+      <p><strong>Cantidad de pedidos:</strong> ${dayData.cantidadPedidos || 0}</p>
+      <p><strong>Cerrado:</strong> ${dayData.closedAt ? new Date(dayData.closedAt.seconds * 1000).toLocaleString("es-AR") : "No cerrado"}</p>
     `;
+    detalle.appendChild(resumen);
+    
+    // Lista de pedidos
+    const pedidos = document.createElement("div");
+    pedidos.innerHTML = "<h3>Pedidos del día</h3>";
+    
+    dayData.pedidosDetalle.forEach((pedido, index) => {
+      const pedidoCard = document.createElement("div");
+      pedidoCard.className = "pedido-card";
+      
+      const fecha = pedido.createdAt ? new Date(pedido.createdAt.seconds * 1000).toLocaleString("es-AR") : "Sin fecha";
+      const itemsHTML = pedido.items.map(item => 
+        `<div class="pedido-items">• ${item.cantidad}× ${item.nombre} – ${fmt.format(item.subtotal)}</div>`
+      ).join("");
+      
+      pedidoCard.innerHTML = `
+        <div class="pedido-header">
+          <span><strong>Pedido #${index + 1}</strong></span>
+          <span class="pedido-total">${fmt.format(pedido.total)}</span>
+        </div>
+        <div class="pedido-time">${fecha}</div>
+        <div>${itemsHTML}</div>
+      `;
+      
+      pedidos.appendChild(pedidoCard);
+    });
+    
+    detalle.appendChild(pedidos);
+    }, "Cargando detalles", "Obteniendo pedidos del día...");
+  };
+  
+  $("#btn-refrescar-dias").onclick=cargarDias;
+
+  // Init
+  function initComercio(){
+    $("#negocio").value=DEFAULTS.negocio; $("#direccion").value=DEFAULTS.direccion;
+    $("#cuit").value=DEFAULTS.cuit; $("#condicion").value=DEFAULTS.condicion;
+    loadLocalData(); // Sin loader para carga rápida
   }
 
-  function printTicket(){
-    // Render
-    $("#ticket").innerHTML = buildTicketHTML();
-    // Imprimir
-    window.print();
+  // Función con timeout para operaciones de Firebase
+  async function withTimeout(promise, timeoutMs = 10000, operationName = "operación") {
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error(`Timeout: ${operationName} tardó más de ${timeoutMs}ms`)), timeoutMs);
+    });
+    
+    return Promise.race([promise, timeoutPromise]);
   }
 
-  // ——— Eventos ———
-  $("#btn-agregar").addEventListener("click", addItem);
-  $("#btn-limpiar").addEventListener("click", ()=>{
-    if(confirm("¿Vaciar todos los ítems?")){ state.items = []; renderItems(); }
-  });
-  $("#tabla-items").addEventListener("click", (e)=>{
-    const btn = e.target.closest("[data-del]");
-    if(btn){ removeItem(parseInt(btn.dataset.del, 10)); }
-  });
-  $("#btn-guardar").addEventListener("click", ()=>{ save(); alert("Datos guardados en este navegador."); });
-  $("#btn-restaurar").addEventListener("click", ()=>{ loadSaved(); alert("Datos restaurados."); });
-  $("#btn-imprimir").addEventListener("click", printTicket);
+  // Función principal de inicialización
+  async function initApp(){
+    try {
+      // Mostrar loader inicial
+      showLoader("Iniciando aplicación...", "Preparando sistema");
+      
+      // Inicializar datos del comercio primero (rápido)
+      initComercio();
+      
+      // Cargar precios desde Firebase con timeout
+      showLoader("Cargando precios...", "Obteniendo datos de productos");
+      PRICES = await withTimeout(loadPrices(), 15000, "carga de precios");
+      
+      // Cargar historial de días con timeout (opcional, no crítico)
+      showLoader("Cargando historial...", "Obteniendo datos de ventas");
+      try {
+        await withTimeout(cargarDias(false), 8000, "carga de historial");
+      } catch (historialError) {
+        console.warn("Error cargando historial (no crítico):", historialError);
+        // Continuar sin historial si falla
+      }
+      
+      // Ocultar loader cuando todo esté listo
+      hideLoader();
+      
+      // Remover clase de carga de la aplicación
+      document.querySelector('.app').classList.remove('app-loading');
+      
+    } catch (error) {
+      console.error("Error al inicializar la aplicación:", error);
+      
+      if (error.message.includes("Timeout")) {
+        showLoader("Conexión lenta", "La base de datos está respondiendo lentamente");
+        setTimeout(() => {
+          hideLoader();
+          document.querySelector('.app').classList.remove('app-loading');
+          alert("La conexión está lenta. La aplicación funcionará con datos limitados.");
+        }, 2000);
+      } else {
+        showLoader("Error de conexión", "No se pudo conectar con la base de datos");
+        setTimeout(() => {
+          hideLoader();
+          document.querySelector('.app').classList.remove('app-loading');
+          alert("Error al conectar con la base de datos. Algunas funciones pueden no estar disponibles.");
+        }, 3000);
+      }
+    }
+  }
 
-  // Prefill inicial
-  (function init(){
-    // Defaults visibles la primera vez
-    $("#negocio").value   = DEFAULTS.negocio;
-    $("#direccion").value = DEFAULTS.direccion;
-    $("#cuit").value      = DEFAULTS.cuit;
-    $("#condicion").value = DEFAULTS.condicion;
-    loadSaved(); // sobrescribe si ya hay guardado
-  })();
-})();
+  // Inicializar la aplicación
+  initApp();
 </script>
 </body>
 </html>

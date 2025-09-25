@@ -1,0 +1,27 @@
+// Reglas de seguridad para Firebase Firestore
+// Copia y pega esto en Firebase Console > Firestore Database > Rules
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Permitir lectura y escritura en la colección 'prices'
+    match /prices/{document} {
+      allow read, write: if true;
+    }
+    
+    // Permitir lectura y escritura en la colección 'orders'
+    match /orders/{document} {
+      allow read, write: if true;
+    }
+    
+    // Permitir lectura y escritura en la colección 'cajas'
+    match /cajas/{document} {
+      allow read, write: if true;
+    }
+    
+    // Permitir lectura y escritura en la colección 'daily'
+    match /daily/{document} {
+      allow read, write: if true;
+    }
+  }
+}
